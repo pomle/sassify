@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.14",
+    "ts-morph": "^17.0.1",
+    "typescript": "^4.9.4"
+  }
+}
