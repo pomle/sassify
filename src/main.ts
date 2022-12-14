@@ -6,6 +6,7 @@ import {
   StructureKind,
   SyntaxKind,
 } from "ts-morph";
+import fs from "fs";
 import { processMakeStyles } from "./sassify";
 
 function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
@@ -81,9 +82,11 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   if (buffer.length > 0) {
     process.stdout.write(buffer);
 
-    const styleSheetFile = sourceFile
-      .getDirectory()
-      .createSourceFile("styles.module.sass", buffer, { overwrite: true });
+    const stylesheetFilename = "styles.module.sass";
+
+    const sourceDir = sourceFile.getDirectory();
+
+    fs.appendFileSync(sourceDir.getPath() + "/" + stylesheetFilename, buffer);
 
     if (stylesVaribles.length !== 1) {
       throw new Error("Wrong usage of style hook found");
@@ -93,7 +96,7 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
 
     sourceFile.addImportDeclaration({
       defaultImport: stylesVariable,
-      moduleSpecifier: "./" + styleSheetFile.getBaseName(),
+      moduleSpecifier: "./" + stylesheetFilename,
     });
 
     const classNamesAttributes = sourceFile
