@@ -44,7 +44,7 @@ export function SassWriter() {
         if (cssSelector.isKind(SyntaxKind.Identifier)) {
           addLine("." + cssSelector.getText());
         } else if (cssSelector.isKind(SyntaxKind.StringLiteral)) {
-          addLine(cssSelector.getText().slice(1, -1));
+          addLine(cssSelector.getLiteralValue());
         }
 
         indent++;
@@ -75,7 +75,7 @@ export function SassWriter() {
           const value = prop.getChildAtIndex(2);
           if (value.isKind(SyntaxKind.ObjectLiteralExpression)) {
             addEmptyLine();
-            addLine(key.getText().slice(1, -1));
+            addLine(key.getLiteralValue());
             indent++;
             this.convertStyleBlock(value);
             indent--;
@@ -94,7 +94,7 @@ export function SassWriter() {
         propValue.isKind(SyntaxKind.StringLiteral) ||
         propValue.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
       ) {
-        let value = propValue.getText().slice(1, -1);
+        let value = propValue.getLiteralText();
 
         if (key.startsWith("animation")) {
           value = value.replace("$", "");
