@@ -113,8 +113,7 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
       if (attributeValue) {
         const className = attributeValue.getLiteralText();
         if (classNames.includes(className)) {
-          const structure = classNamesAttribute.getStructure();
-          attributeValue.setLiteralValue(`{${stylesVariable}.${className}}`);
+          attributeValue.replaceWithText(`{${stylesVariable}.${className}}`);
         }
       }
     }
