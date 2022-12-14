@@ -21,6 +21,8 @@ export function SassWriter() {
 
   const lines: string[] = [];
 
+  const classes: string[] = [];
+
   function addLine(text: string) {
     lines.push("  ".repeat(indent) + text + "\n");
   }
@@ -74,8 +76,14 @@ export function SassWriter() {
         } else if (key.isKind(SyntaxKind.StringLiteral)) {
           const value = prop.getChildAtIndex(2);
           if (value.isKind(SyntaxKind.ObjectLiteralExpression)) {
+            const selector = key.getLiteralValue();
+            const classMatches = selector.match(/\.(\w+)/);
+            if (classMatches) {
+              classes.push(classMatches[1]);
+            }
+
             addEmptyLine();
-            addLine(key.getLiteralValue());
+            addLine(selector);
             indent++;
             this.convertStyleBlock(value);
             indent--;
@@ -135,6 +143,10 @@ export function SassWriter() {
 
     getOutput() {
       return lines.join("");
+    },
+
+    getClasses() {
+      return classes;
     },
   };
 }
