@@ -127,8 +127,6 @@ export function SassWriter() {
         this.convertStyleBlock(propValue);
         indent--;
       } else {
-        console.warn("Unknown prop value", key, propValue.getText());
-
         addLine("/* FIXME: Unknown prop value");
         addLine(" * " + key + ":");
         propValue
