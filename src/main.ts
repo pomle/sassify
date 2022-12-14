@@ -6,19 +6,7 @@ import {
   StructureKind,
   SyntaxKind,
 } from "ts-morph";
-import { createSass } from "./sassify";
-
-function processMakeStyles(makeStylesCall: CallExpression) {
-  const callArguments = makeStylesCall.getArguments();
-  for (const callArg of callArguments) {
-    const jssObject = callArg.asKind(SyntaxKind.ObjectLiteralExpression);
-    if (jssObject) {
-      return createSass(jssObject);
-    }
-  }
-
-  return "";
-}
+import { processMakeStyles } from "./sassify";
 
 function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   const sourceFile = makeStylesImportDeclaration.getSourceFile();
@@ -41,6 +29,7 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   let buffer = "";
 
   const stylesVaribles: string[] = [];
+  const classNames: string[] = [];
 
   console.log("Processing %s makeStyles references", makeStylesCalls.length);
 
@@ -53,8 +42,11 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
       continue;
     }
 
-    const stylesheet = processMakeStyles(callExpression);
-    buffer += stylesheet;
+    const result = processMakeStyles(callExpression);
+    if (result) {
+      buffer += result.stylesheet;
+      classNames.push(...result.classNames);
+    }
 
     const styleHookIdentifier = callExpression
       .getFirstAncestorByKind(SyntaxKind.VariableDeclaration)
@@ -111,17 +103,19 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
           attr.getFirstChildByKind(SyntaxKind.Identifier)?.getText() ===
           "className"
         );
-      })
-      .filter((attr) => {
-        return attr.getFirstChildByKind(SyntaxKind.StringLiteral);
       });
 
     for (const classNamesAttribute of classNamesAttributes) {
-      const structure = classNamesAttribute.getStructure();
-      const value = structure["initializer"];
-      if (value && value.length) {
-        structure["initializer"] = `{${stylesVariable}.${value.slice(1, -1)}}`;
-        classNamesAttribute.set(structure);
+      const attributeValue = classNamesAttribute.getFirstChildByKind(
+        SyntaxKind.StringLiteral
+      );
+
+      if (attributeValue) {
+        const className = attributeValue.getLiteralText();
+        if (classNames.includes(className)) {
+          const structure = classNamesAttribute.getStructure();
+          attributeValue.setLiteralValue(`{${stylesVariable}.${className}}`);
+        }
       }
     }
   }
