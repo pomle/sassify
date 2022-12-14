@@ -120,6 +120,16 @@ export function SassWriter() {
         indent--;
       } else {
         console.warn("Unknown prop value", key, propValue.getText());
+
+        addLine("/* FIXME: Unknown prop value");
+        addLine(" * " + key + ":");
+        propValue
+          .getText()
+          .split("\n")
+          .forEach((line) => {
+            addLine(" * " + line);
+          });
+        addLine(" */");
       }
     },
 
