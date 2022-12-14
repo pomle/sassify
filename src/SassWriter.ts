@@ -39,6 +39,7 @@ export function SassWriter() {
 
       for (const styleClause of styleClauses) {
         const cssSelector = styleClause.getChildAtIndex(0);
+        const styleProperties = styleClause.getChildAtIndex(2);
 
         if (cssSelector.isKind(SyntaxKind.Identifier)) {
           addLine("." + cssSelector.getText());
@@ -48,7 +49,6 @@ export function SassWriter() {
 
         indent++;
 
-        const styleProperties = styleClause.getChildAtIndex(2);
         if (styleProperties.isKind(SyntaxKind.ObjectLiteralExpression)) {
           this.convertStyleBlock(styleProperties);
         }
