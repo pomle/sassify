@@ -21,6 +21,7 @@ function processMakeStyles(makeStylesCall: CallExpression) {
 
 function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   const sourceFile = makeStylesImportDeclaration.getSourceFile();
+  console.log("Processing", sourceFile.getBaseName());
 
   const makeStylesIdentifier =
     makeStylesImportDeclaration.getFirstDescendantByKindOrThrow(
@@ -39,25 +40,43 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
       continue;
     }
 
-    const variableExpression = callExpression.getFirstAncestorByKind(
+    const makeStylesDefinition = callExpression.getFirstAncestorByKind(
       SyntaxKind.VariableStatement
     );
 
-    if (!variableExpression) {
+    if (!makeStylesDefinition) {
       continue;
     }
 
-    const stylesheetCSS = processMakeStyles(callExpression);
-    console.log("Stylesheet", sourceFile.getBaseName());
+    const stylesheet = processMakeStyles(callExpression);
 
-    process.stdout.write(stylesheetCSS);
+    process.stdout.write(stylesheet);
 
-    buffer += stylesheetCSS;
+    buffer += stylesheet;
 
-    variableExpression.remove();
+    const styleHookIdentifier = callExpression
+      .getFirstAncestorByKind(SyntaxKind.VariableDeclaration)
+      ?.getFirstChildByKind(SyntaxKind.Identifier);
+
+    if (styleHookIdentifier) {
+      const styleHookReferences = styleHookIdentifier.findReferencesAsNodes();
+      for (const hookCall of styleHookReferences) {
+        if (hookCall.isKind(SyntaxKind.Identifier)) {
+          hookCall
+            .getFirstAncestorByKind(SyntaxKind.VariableStatement)
+            ?.remove();
+        }
+      }
+    }
+
+    makeStylesDefinition.remove();
   }
 
+  makeStylesImportDeclaration.remove();
+
   if (buffer.length > 0) {
+    process.stdout.write(buffer);
+
     const styleSheetFile = sourceFile
       .getDirectory()
       .createSourceFile("styles.sass", buffer, { overwrite: true });
@@ -66,8 +85,6 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
       moduleSpecifier: "./" + styleSheetFile.getBaseName(),
     });
   }
-
-  makeStylesImportDeclaration.remove();
 }
 
 function main() {
@@ -85,7 +102,6 @@ function main() {
       continue;
     }
 
-    console.log("Fixing:", sourceFile.getBaseName());
     upgradeSourceFile(importDeclaration);
   }
 
