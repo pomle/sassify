@@ -34,6 +34,8 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
 
   let buffer = "";
 
+  const stylesVaribles: string[] = [];
+
   for (const ref of makeStylesReferences) {
     const callExpression = ref.getParentIfKind(SyntaxKind.CallExpression);
     if (!callExpression) {
@@ -62,9 +64,19 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
       const styleHookReferences = styleHookIdentifier.findReferencesAsNodes();
       for (const hookCall of styleHookReferences) {
         if (hookCall.isKind(SyntaxKind.Identifier)) {
-          hookCall
-            .getFirstAncestorByKind(SyntaxKind.VariableStatement)
-            ?.remove();
+          const styleVariableStatement = hookCall.getFirstAncestorByKind(
+            SyntaxKind.VariableStatement
+          );
+
+          if (styleVariableStatement) {
+            const identifier =
+              styleVariableStatement.getFirstDescendantByKindOrThrow(
+                SyntaxKind.Identifier
+              );
+            stylesVaribles.push(identifier.getText());
+
+            styleVariableStatement.remove();
+          }
         }
       }
     }
@@ -79,9 +91,14 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
 
     const styleSheetFile = sourceFile
       .getDirectory()
-      .createSourceFile("styles.sass", buffer, { overwrite: true });
+      .createSourceFile("styles.module.sass", buffer, { overwrite: true });
+
+    if (stylesVaribles.length !== 1) {
+      throw new Error("Wrong usage of style hook found");
+    }
 
     sourceFile.addImportDeclaration({
+      defaultImport: stylesVaribles[0],
       moduleSpecifier: "./" + styleSheetFile.getBaseName(),
     });
   }
