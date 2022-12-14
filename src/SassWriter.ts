@@ -50,7 +50,7 @@ export function SassWriter() {
 
         const styleProperties = styleClause.getChildAtIndex(2);
         if (styleProperties.isKind(SyntaxKind.ObjectLiteralExpression)) {
-          this.convertJSSStyles(styleProperties);
+          this.convertStyleBlock(styleProperties);
         }
 
         indent--;
@@ -58,7 +58,7 @@ export function SassWriter() {
       }
     },
 
-    convertJSSStyles(jssObject: ObjectLiteralExpression) {
+    convertStyleBlock(jssObject: ObjectLiteralExpression) {
       const properties = jssObject.getChildrenOfKind(
         SyntaxKind.PropertyAssignment
       );
@@ -77,7 +77,7 @@ export function SassWriter() {
             addEmptyLine();
             addLine(key.getText().slice(1, -1));
             indent++;
-            this.convertJSSStyles(value);
+            this.convertStyleBlock(value);
             indent--;
           }
         }
