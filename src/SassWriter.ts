@@ -22,14 +22,19 @@ function toProperty(styleProperty: PropertyAssignment) {
 
   const key = toKebab(propName.getText());
 
-  if (propValue.isKind(SyntaxKind.StringLiteral)) {
+  if (
+    propValue.isKind(SyntaxKind.StringLiteral) ||
+    propValue.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
+  ) {
+    let value = propValue.getText().slice(1, -1);
+
     if (key.startsWith("animation")) {
       console.info("Unhandled $ prefix in animation name");
     }
 
     return {
       key,
-      value: propValue.getText().slice(1, -1),
+      value,
     };
   } else if (
     propValue.isKind(SyntaxKind.PrefixUnaryExpression) ||
