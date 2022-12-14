@@ -101,6 +101,12 @@ export function SassWriter() {
           //console.info("Unhandled $ prefix in animation name");
         }
 
+        // Sass needs newlines escaped
+        value = value
+          .split("\n")
+          .map((t) => t.trim())
+          .join(" ");
+
         addLine(`${key}: ${value}`);
       } else if (
         propValue.isKind(SyntaxKind.PrefixUnaryExpression) ||
