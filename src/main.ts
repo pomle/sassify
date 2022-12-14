@@ -28,20 +28,22 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
       SyntaxKind.Identifier
     );
 
-  const makeStylesReferences = makeStylesIdentifier
-    .findReferencesAsNodes()
-    .filter((n) => n.getSourceFile() === sourceFile);
+  const makeStylesCalls = sourceFile
+    .getDescendantsOfKind(SyntaxKind.CallExpression)
+    .filter((callExpression) => {
+      const identifier = callExpression.getFirstChildIfKind(
+        SyntaxKind.Identifier
+      );
+      return identifier?.getText() === makeStylesIdentifier.getText();
+    });
 
   let buffer = "";
 
   const stylesVaribles: string[] = [];
 
-  for (const ref of makeStylesReferences) {
-    const callExpression = ref.getParentIfKind(SyntaxKind.CallExpression);
-    if (!callExpression) {
-      continue;
-    }
+  console.log("Processing %s makeStyles references", makeStylesCalls.length);
 
+  for (const callExpression of makeStylesCalls) {
     const makeStylesDefinition = callExpression.getFirstAncestorByKind(
       SyntaxKind.VariableStatement
     );
