@@ -107,6 +107,11 @@ export function SassWriter() {
         propValue.isKind(SyntaxKind.NumericLiteral)
       ) {
         addLine(`${key}: ${propValue.getText()}`);
+      } else if (propValue.isKind(SyntaxKind.ObjectLiteralExpression)) {
+        addLine(key);
+        indent++;
+        this.convertStyleBlock(propValue);
+        indent--;
       } else {
         console.warn("Unknown prop value", key, propValue.getText());
       }
