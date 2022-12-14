@@ -61,20 +61,20 @@ export function SassWriter() {
     },
 
     convertStyleBlock(jssObject: ObjectLiteralExpression) {
-      const properties = jssObject.getChildrenOfKind(
+      const propertyAssignments = jssObject.getChildrenOfKind(
         SyntaxKind.PropertyAssignment
       );
 
-      for (const prop of properties) {
-        const key = prop.getChildAtIndex(0);
+      for (const propertyAssignment of propertyAssignments) {
+        const key = propertyAssignment.getChildAtIndex(0);
 
         // When CSS property
         if (key.isKind(SyntaxKind.Identifier)) {
-          this.convertProperty(prop);
+          this.convertProperty(propertyAssignment);
 
           // When subselector
         } else if (key.isKind(SyntaxKind.StringLiteral)) {
-          const value = prop.getChildAtIndex(2);
+          const value = propertyAssignment.getChildAtIndex(2);
           if (value.isKind(SyntaxKind.ObjectLiteralExpression)) {
             const selector = key.getLiteralValue();
             const classMatches = selector.match(/\.(\w+)/);
