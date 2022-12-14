@@ -16,52 +16,6 @@ function toKebab(text: string) {
     .join("");
 }
 
-function toProperty(styleProperty: PropertyAssignment) {
-  const propName = styleProperty.getChildAtIndex(0);
-  const propValue = styleProperty.getChildAtIndex(2);
-
-  const key = toKebab(propName.getText());
-
-  if (
-    propValue.isKind(SyntaxKind.StringLiteral) ||
-    propValue.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
-  ) {
-    let value = propValue.getText().slice(1, -1);
-
-    if (key.startsWith("animation")) {
-      console.info("Unhandled $ prefix in animation name");
-    }
-
-    return {
-      key,
-      value,
-    };
-  } else if (
-    propValue.isKind(SyntaxKind.PrefixUnaryExpression) ||
-    propValue.isKind(SyntaxKind.NumericLiteral)
-  ) {
-    return {
-      key,
-      value: propValue.getText(),
-    };
-  } else {
-    console.warn("Unknown prop value", propValue.getText());
-
-    return {
-      key,
-      value: propValue.getText(),
-    };
-  }
-}
-
-function toClause(jssStyles: ObjectLiteralExpression) {
-  const styleProperties = jssStyles.getChildrenOfKind(
-    SyntaxKind.PropertyAssignment
-  );
-
-  return styleProperties.map(toProperty);
-}
-
 export function SassWriter() {
   let indent = 0;
 
@@ -114,8 +68,7 @@ export function SassWriter() {
 
         // When CSS property
         if (key.isKind(SyntaxKind.Identifier)) {
-          const entry = toProperty(prop);
-          addLine(`${entry.key}: ${entry.value}`);
+          this.convertProperty(prop);
 
           // When subselector
         } else if (key.isKind(SyntaxKind.StringLiteral)) {
@@ -128,6 +81,34 @@ export function SassWriter() {
             indent--;
           }
         }
+      }
+    },
+
+    convertProperty(styleProperty: PropertyAssignment) {
+      const propName = styleProperty.getChildAtIndex(0);
+      const propValue = styleProperty.getChildAtIndex(2);
+
+      const key = toKebab(propName.getText());
+
+      if (
+        propValue.isKind(SyntaxKind.StringLiteral) ||
+        propValue.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
+      ) {
+        let value = propValue.getText().slice(1, -1);
+
+        if (key.startsWith("animation")) {
+          value = value.replace("$", "");
+          //console.info("Unhandled $ prefix in animation name");
+        }
+
+        addLine(`${key}: ${value}`);
+      } else if (
+        propValue.isKind(SyntaxKind.PrefixUnaryExpression) ||
+        propValue.isKind(SyntaxKind.NumericLiteral)
+      ) {
+        addLine(`${key}: ${propValue.getText()}`);
+      } else {
+        console.warn("Unknown prop value", key, propValue.getText());
       }
     },
 
