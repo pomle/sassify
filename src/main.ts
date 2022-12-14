@@ -3,6 +3,7 @@ import {
   Identifier,
   ImportDeclaration,
   Project,
+  StructureKind,
   SyntaxKind,
 } from "ts-morph";
 import { createSass } from "./sassify";
@@ -96,10 +97,33 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
       throw new Error("Wrong usage of style hook found");
     }
 
+    const stylesVariable = stylesVaribles[0];
+
     sourceFile.addImportDeclaration({
-      defaultImport: stylesVaribles[0],
+      defaultImport: stylesVariable,
       moduleSpecifier: "./" + styleSheetFile.getBaseName(),
     });
+
+    const classNamesAttributes = sourceFile
+      .getDescendantsOfKind(SyntaxKind.JsxAttribute)
+      .filter((attr) => {
+        return (
+          attr.getFirstChildByKind(SyntaxKind.Identifier)?.getText() ===
+          "className"
+        );
+      })
+      .filter((attr) => {
+        return attr.getFirstChildByKind(SyntaxKind.StringLiteral);
+      });
+
+    for (const classNamesAttribute of classNamesAttributes) {
+      const structure = classNamesAttribute.getStructure();
+      const value = structure["initializer"];
+      if (value && value.length) {
+        structure["initializer"] = `{${stylesVariable}.${value.slice(1, -1)}}`;
+        classNamesAttribute.set(structure);
+      }
+    }
   }
 }
 
