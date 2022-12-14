@@ -51,9 +51,6 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
     }
 
     const stylesheet = processMakeStyles(callExpression);
-
-    process.stdout.write(stylesheet);
-
     buffer += stylesheet;
 
     const styleHookIdentifier = callExpression
