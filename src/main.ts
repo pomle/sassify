@@ -82,17 +82,19 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   if (buffer.length > 0) {
     process.stdout.write(buffer);
 
+    if (stylesVaribles.length !== 1) {
+      throw new Error("Wrong usage of style hook found");
+    }
+    const stylesVariable = stylesVaribles[0];
+
     const stylesheetFilename = "styles.module.sass";
 
     const sourceDir = sourceFile.getDirectory();
 
-    fs.appendFileSync(sourceDir.getPath() + "/" + stylesheetFilename, buffer);
-
-    if (stylesVaribles.length !== 1) {
-      throw new Error("Wrong usage of style hook found");
-    }
-
-    const stylesVariable = stylesVaribles[0];
+    const stylesheetFile =
+      sourceDir.getSourceFile(stylesheetFilename) ??
+      sourceDir.createSourceFile(stylesheetFilename);
+    stylesheetFile.replaceWithText(stylesheetFile.getText() + buffer);
 
     sourceFile.addImportDeclaration({
       defaultImport: stylesVariable,
