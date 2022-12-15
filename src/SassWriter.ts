@@ -65,31 +65,45 @@ export function SassWriter() {
         SyntaxKind.PropertyAssignment
       );
 
-      for (const propertyAssignment of propertyAssignments) {
-        const key = propertyAssignment.getChildAtIndex(0);
+      jssObject.forEachChild((node) => {
+        if (node.isKind(SyntaxKind.PropertyAssignment)) {
+          const propertyAssignment = node;
+          const key = propertyAssignment.getChildAtIndex(0);
 
-        // When CSS property
-        if (key.isKind(SyntaxKind.Identifier)) {
-          this.convertProperty(propertyAssignment);
+          // When CSS property
+          if (key.isKind(SyntaxKind.Identifier)) {
+            this.convertProperty(propertyAssignment);
 
-          // When subselector
-        } else if (key.isKind(SyntaxKind.StringLiteral)) {
-          const value = propertyAssignment.getChildAtIndex(2);
-          if (value.isKind(SyntaxKind.ObjectLiteralExpression)) {
-            const selector = key.getLiteralValue();
-            const classMatches = selector.match(/\.(\w+)/);
-            if (classMatches) {
-              classes.push(classMatches[1]);
+            // When subselector
+          } else if (key.isKind(SyntaxKind.StringLiteral)) {
+            const value = propertyAssignment.getChildAtIndex(2);
+            if (value.isKind(SyntaxKind.ObjectLiteralExpression)) {
+              const selector = key.getLiteralValue();
+              const classMatches = selector.matchAll(/\.(\w+)/g);
+              for (const match of classMatches) {
+                if (classMatches) {
+                  classes.push(match[1]);
+                }
+              }
+
+              addEmptyLine();
+              addLine(selector);
+              indent++;
+              this.convertStyleBlock(value);
+              indent--;
             }
-
-            addEmptyLine();
-            addLine(selector);
-            indent++;
-            this.convertStyleBlock(value);
-            indent--;
           }
+        } else {
+          addLine("/* FIXME: Unhandled directive");
+          node
+            .getText()
+            .split("\n")
+            .forEach((line) => {
+              addLine(" * " + line);
+            });
+          addLine(" */");
         }
-      }
+      });
     },
 
     convertProperty(styleProperty: PropertyAssignment) {
