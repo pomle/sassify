@@ -125,12 +125,23 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   }
 }
 
-function main() {
+type Config = {
+  write: boolean;
+};
+
+function main(
+  sourceDir: string,
+  pattern: string,
+  { write = false }: Partial<Config> = {}
+) {
+  process.chdir(sourceDir);
+
   const project = new Project({
     tsConfigFilePath: "./tsconfig.json",
   });
 
-  const sourceFiles = project.getSourceFiles("src/**/*.tsx");
+  const sourceFiles = project.getSourceFiles(pattern);
+
   for (const sourceFile of sourceFiles) {
     const importDeclaration = sourceFile.getImportDeclaration(
       "@material-ui/styles"
@@ -143,10 +154,32 @@ function main() {
     upgradeSourceFile(importDeclaration);
   }
 
-  project.saveSync();
+  if (write) {
+    project.saveSync();
+  }
 }
 
-const path = process.argv.at(2) ?? process.cwd();
-process.chdir(path);
+let path = process.cwd();
+let pattern = "src/**/*.tsx";
 
-main();
+let config: Partial<Config> = {};
+
+let positional = 0;
+for (const arg of process.argv.slice(2)) {
+  if (arg.startsWith("-")) {
+    if (arg === "-w") {
+      config.write = true;
+    }
+  } else {
+    if (positional === 0) {
+      path = arg;
+    } else if (positional === 1) {
+      pattern = arg;
+    }
+    positional++;
+  }
+}
+
+console.debug("Path: %s, Pattern: %s", path, pattern, config);
+
+main(path, pattern, config);
