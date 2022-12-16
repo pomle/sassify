@@ -1,17 +1,9 @@
-import {
-  CallExpression,
-  Identifier,
-  ImportDeclaration,
-  Project,
-  StructureKind,
-  SyntaxKind,
-} from "ts-morph";
-import fs from "fs";
+import { ImportDeclaration, Project, SyntaxKind } from "ts-morph";
 import { processMakeStyles } from "./sassify";
 
 function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   const sourceFile = makeStylesImportDeclaration.getSourceFile();
-  console.log("Processing", sourceFile.getBaseName());
+  console.log("Processing", sourceFile.getFilePath());
 
   const makeStylesIdentifier =
     makeStylesImportDeclaration.getFirstDescendantByKindOrThrow(

@@ -1,4 +1,5 @@
 import {
+  ArrowFunction,
   ObjectLiteralExpression,
   PropertyAssignment,
   SyntaxKind,
@@ -50,28 +51,43 @@ export function SassWriter() {
           const styleClause = child;
 
           const cssSelector = styleClause.getChildAtIndex(0);
+
           if (cssSelector.isKind(SyntaxKind.Identifier)) {
+            // Unquoted property in root becomes class
             addLine("." + cssSelector.getText());
           } else if (cssSelector.isKind(SyntaxKind.StringLiteral)) {
+            // Is literal, like top level @media query, or @keyframes
             addLine(cssSelector.getLiteralValue());
           } else {
             addComment("FIXME: Unhandled selector", cssSelector.getText());
           }
 
           indent++;
-          const definition = styleClause.getChildAtIndex(2);
-          if (definition.isKind(SyntaxKind.ObjectLiteralExpression)) {
-            this.convertStyleBlock(definition);
-          } else {
-            addComment("FIXME: Unhandled definition", definition.getText());
-          }
-
+          this.convertClause(styleClause);
           indent--;
+
           addEmptyLine();
         } else {
           addComment("FIXME: Unhandled entry", child.getText());
         }
       });
+    },
+
+    convertClause(propertyAssignment: PropertyAssignment) {
+      const value = propertyAssignment.getChildAtIndex(2);
+      if (value.isKind(SyntaxKind.ObjectLiteralExpression)) {
+        this.convertStyleBlock(value);
+      } else if (value.isKind(SyntaxKind.ArrowFunction)) {
+        console.log("Found arrow");
+        const returnValue = value.getFirstDescendantByKind(
+          SyntaxKind.ObjectLiteralExpression
+        );
+        if (returnValue) {
+          this.convertStyleBlock(returnValue);
+        } else {
+          addComment("FIXME: Unhandled definition", value.getText());
+        }
+      }
     },
 
     convertStyleBlock(jssObject: ObjectLiteralExpression) {
