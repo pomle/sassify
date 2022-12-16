@@ -27,6 +27,16 @@ export function SassWriter() {
     lines.push("  ".repeat(indent) + text + "\n");
   }
 
+  function addComment(title: string, text: string) {
+    addLine("/* " + title);
+
+    text.split("\n").forEach((line) => {
+      addLine(" * " + line);
+    });
+
+    addLine(" */");
+  }
+
   function addEmptyLine() {
     lines.push("\n");
   }
@@ -94,14 +104,7 @@ export function SassWriter() {
             }
           }
         } else {
-          addLine("/* FIXME: Unhandled directive");
-          node
-            .getText()
-            .split("\n")
-            .forEach((line) => {
-              addLine(" * " + line);
-            });
-          addLine(" */");
+          addComment("FIXME: Unhandled directive", node.getText());
         }
       });
     },
@@ -141,15 +144,7 @@ export function SassWriter() {
         this.convertStyleBlock(propValue);
         indent--;
       } else {
-        addLine("/* FIXME: Unknown prop value");
-        addLine(" * " + key + ":");
-        propValue
-          .getText()
-          .split("\n")
-          .forEach((line) => {
-            addLine(" * " + line);
-          });
-        addLine(" */");
+        addComment("FIXME: Unhandled directive", styleProperty.getText());
       }
     },
 
