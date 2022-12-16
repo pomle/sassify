@@ -54,51 +54,27 @@ export function SassWriter() {
             addLine("." + cssSelector.getText());
           } else if (cssSelector.isKind(SyntaxKind.StringLiteral)) {
             addLine(cssSelector.getLiteralValue());
+          } else {
+            addComment("FIXME: Unhandled selector", cssSelector.getText());
           }
 
           indent++;
           const definition = styleClause.getChildAtIndex(2);
           if (definition.isKind(SyntaxKind.ObjectLiteralExpression)) {
             this.convertStyleBlock(definition);
+          } else {
+            addComment("FIXME: Unhandled definition", definition.getText());
           }
 
           indent--;
           addEmptyLine();
         } else {
-          addComment("FIXME: Unhandled directive", child.getText());
+          addComment("FIXME: Unhandled entry", child.getText());
         }
       });
-
-      const styleClauses = jssObject.getChildrenOfKind(
-        SyntaxKind.PropertyAssignment
-      );
-
-      for (const styleClause of styleClauses) {
-        const cssSelector = styleClause.getChildAtIndex(0);
-        const styleProperties = styleClause.getChildAtIndex(2);
-
-        if (cssSelector.isKind(SyntaxKind.Identifier)) {
-          addLine("." + cssSelector.getText());
-        } else if (cssSelector.isKind(SyntaxKind.StringLiteral)) {
-          addLine(cssSelector.getLiteralValue());
-        }
-
-        indent++;
-
-        if (styleProperties.isKind(SyntaxKind.ObjectLiteralExpression)) {
-          this.convertStyleBlock(styleProperties);
-        }
-
-        indent--;
-        addEmptyLine();
-      }
     },
 
     convertStyleBlock(jssObject: ObjectLiteralExpression) {
-      const propertyAssignments = jssObject.getChildrenOfKind(
-        SyntaxKind.PropertyAssignment
-      );
-
       jssObject.forEachChild((node) => {
         if (node.isKind(SyntaxKind.PropertyAssignment)) {
           const propertyAssignment = node;
@@ -125,10 +101,12 @@ export function SassWriter() {
               indent++;
               this.convertStyleBlock(value);
               indent--;
+            } else {
+              addComment("FIXME: Unhandled definition", node.getText());
             }
+          } else {
+            addComment("FIXME: Unhandled property", node.getText());
           }
-        } else {
-          addComment("FIXME: Unhandled directive", node.getText());
         }
       });
     },
