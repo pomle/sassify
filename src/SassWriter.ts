@@ -45,6 +45,30 @@ export function SassWriter() {
     convertMakeStyles(jssObject: ObjectLiteralExpression) {
       // Special first layer where identifiers are object keys, and not CSS properties.
 
+      jssObject.forEachChild((child) => {
+        if (child.isKind(SyntaxKind.PropertyAssignment)) {
+          const styleClause = child;
+
+          const cssSelector = styleClause.getChildAtIndex(0);
+          if (cssSelector.isKind(SyntaxKind.Identifier)) {
+            addLine("." + cssSelector.getText());
+          } else if (cssSelector.isKind(SyntaxKind.StringLiteral)) {
+            addLine(cssSelector.getLiteralValue());
+          }
+
+          indent++;
+          const definition = styleClause.getChildAtIndex(2);
+          if (definition.isKind(SyntaxKind.ObjectLiteralExpression)) {
+            this.convertStyleBlock(definition);
+          }
+
+          indent--;
+          addEmptyLine();
+        } else {
+          addComment("FIXME: Unhandled directive", child.getText());
+        }
+      });
+
       const styleClauses = jssObject.getChildrenOfKind(
         SyntaxKind.PropertyAssignment
       );
