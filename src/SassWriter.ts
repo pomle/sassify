@@ -78,7 +78,6 @@ export function SassWriter() {
       if (value.isKind(SyntaxKind.ObjectLiteralExpression)) {
         this.convertStyleBlock(value);
       } else if (value.isKind(SyntaxKind.ArrowFunction)) {
-        console.log("Found arrow");
         const returnValue = value.getFirstDescendantByKind(
           SyntaxKind.ObjectLiteralExpression
         );
