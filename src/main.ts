@@ -58,7 +58,14 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
               styleVariableStatement.getFirstDescendantByKindOrThrow(
                 SyntaxKind.Identifier
               );
+
             stylesVaribles.push(identifier.getText());
+            if (stylesVaribles.length > 0) {
+              const stylesRefs = identifier.findReferencesAsNodes();
+              for (const styleRef of stylesRefs) {
+                styleRef.replaceWithText(stylesVaribles[0]);
+              }
+            }
 
             styleVariableStatement.remove();
           }
