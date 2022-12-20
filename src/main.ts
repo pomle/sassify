@@ -79,10 +79,8 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
   makeStylesImportDeclaration.remove();
 
   if (buffer.length > 0) {
-    process.stdout.write(buffer);
-
-    if (stylesVaribles.length !== 1) {
-      throw new Error("Wrong usage of style hook found");
+    if (stylesVaribles.length === 0) {
+      throw new Error("Found not hook calls");
     }
     const stylesVariable = stylesVaribles[0];
 
