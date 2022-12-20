@@ -119,6 +119,12 @@ function upgradeSourceFile(makeStylesImportDeclaration: ImportDeclaration) {
         }
       }
     }
+
+    console.log("Sass -- ", stylesheetFilename);
+    process.stdout.write(buffer);
+
+    console.log("TS -- ", sourceFile.getBaseName());
+    process.stdout.write(sourceFile.getText());
   }
 }
 
