@@ -154,7 +154,11 @@ function main(
       continue;
     }
 
-    upgradeSourceFile(importDeclaration);
+    try {
+      upgradeSourceFile(importDeclaration);
+    } catch (error) {
+      console.warn("Could not upgrade %s", sourceFile.getFilePath(), error);
+    }
   }
 
   if (write) {
